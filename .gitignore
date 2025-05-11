@@ -8,3 +8,7 @@ wheels/
 .cursor/
 # Virtual environments
 .venv
+.pdf
+data/
+secrets/
+*.env
