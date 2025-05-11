@@ -108,3 +108,51 @@ Software manuals are often lengthy and difficult to navigate. Users need a fast,
 2. **Week 2:** Embedding, indexing, and vector search
 3. **Week 3:** Chat UI and backend integration
 4. **Week 4:** OpenAI integration, testing, and deployment 
+
+---
+
+## 11. Task Breakdown
+
+### 1. Project Setup
+- Initialize repository and version control
+- Set up Python environment and dependency management
+- Configure project structure for frontend and backend
+
+### 2. PDF Upload & Management
+- Implement file upload UI (frontend)
+- Create backend endpoint for PDF upload
+- Store and manage uploaded files
+- List, remove, and replace uploaded manuals
+
+### 3. PDF Parsing & Indexing
+- Integrate PDF parsing library (PyMuPDF or pdfplumber)
+- Extract and clean text from PDFs
+- Split text into logical chunks (section, paragraph, or page)
+- Generate vector embeddings for each chunk (OpenAI API)
+- Store embeddings in a vector database (FAISS, Chroma, or Pinecone)
+
+### 4. Chat Interface
+- Design and implement web-based chat UI (React or Vue.js)
+- Connect chat UI to backend API
+- Display chat history and references to manual sections
+
+### 5. Question Answering
+- Convert user questions to embeddings (OpenAI API)
+- Retrieve relevant manual chunks using semantic search
+- Construct prompts for OpenAI model with retrieved context
+- Return concise, referenced answers to frontend
+
+### 6. Integration & Testing
+- Integrate frontend and backend
+- Test PDF upload, parsing, and chat flow end-to-end
+- Handle errors and edge cases (e.g., parsing failures, large files)
+
+### 7. Deployment
+- Containerize application with Docker
+- Set up deployment pipeline (Vercel, Heroku, or similar)
+- Secure API keys and file uploads
+
+### 8. (Optional/Future) Administration
+- Implement user authentication
+- Add usage analytics
+- Build document management dashboard 
