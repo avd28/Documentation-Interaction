@@ -7,13 +7,15 @@ import io
 from dotenv import load_dotenv
 import openai
 import json
+import numpy as np
+from flask_cors import CORS
 
 # Load environment variables from secrets/.env
 load_dotenv(dotenv_path=os.path.join(os.path.dirname(os.path.dirname(__file__)), 'secrets', '.env'))
 openai.api_key = os.environ.get('OPENAI_API_KEY')
 
 app = Flask(__name__)
-
+CORS(app)
 DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data')
 os.makedirs(DATA_DIR, exist_ok=True)
 
@@ -98,6 +100,97 @@ def index_pdf():
         with open(out_path, 'w', encoding='utf-8') as f:
             json.dump({'filename': filename, 'chunks': chunks}, f)
         return jsonify({'filename': filename, 'chunks': chunks}), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/search', methods=['POST'])
+def semantic_search():
+    data = request.get_json()
+    filename = data.get('filename')
+    query = data.get('query')
+    if not filename or not query:
+        return jsonify({'error': 'Filename and query are required'}), 400
+    emb_path = os.path.join(DATA_DIR, f"{filename}_embeddings.json")
+    if not os.path.exists(emb_path):
+        return jsonify({'error': 'Embeddings file not found. Please index the PDF first.'}), 404
+    try:
+        with open(emb_path, 'r', encoding='utf-8') as f:
+            emb_data = json.load(f)
+        chunks = emb_data['chunks']
+        # Get query embedding
+        response = openai.embeddings.create(
+            input=query,
+            model="text-embedding-3-small"
+        )
+        query_emb = np.array(response.data[0].embedding)
+        # Compute cosine similarity
+        results = []
+        for chunk in chunks:
+            chunk_emb = np.array(chunk['embedding'])
+            sim = float(np.dot(query_emb, chunk_emb) / (np.linalg.norm(query_emb) * np.linalg.norm(chunk_emb) + 1e-8))
+            results.append({
+                'page': chunk['page'],
+                'text': chunk['text'],
+                'similarity': sim
+            })
+        # Sort by similarity, descending
+        results = sorted(results, key=lambda x: x['similarity'], reverse=True)
+        return jsonify({'results': results[:3]}), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/chat', methods=['POST'])
+def chat_qa():
+    data = request.get_json()
+    filename = data.get('filename')
+    question = data.get('question')
+    if not filename or not question:
+        return jsonify({'error': 'Filename and question are required'}), 400
+    emb_path = os.path.join(DATA_DIR, f"{filename}_embeddings.json")
+    if not os.path.exists(emb_path):
+        return jsonify({'error': 'Embeddings file not found. Please index the PDF first.'}), 404
+    try:
+        with open(emb_path, 'r', encoding='utf-8') as f:
+            emb_data = json.load(f)
+        chunks = emb_data['chunks']
+        # Get question embedding
+        response = openai.embeddings.create(
+            input=question,
+            model="text-embedding-3-small"
+        )
+        query_emb = np.array(response.data[0].embedding)
+        # Compute cosine similarity
+        results = []
+        for chunk in chunks:
+            chunk_emb = np.array(chunk['embedding'])
+            sim = float(np.dot(query_emb, chunk_emb) / (np.linalg.norm(query_emb) * np.linalg.norm(chunk_emb) + 1e-8))
+            results.append({
+                'page': chunk['page'],
+                'text': chunk['text'],
+                'similarity': sim
+            })
+        # Sort by similarity, descending, and get top 3
+        top_chunks = sorted(results, key=lambda x: x['similarity'], reverse=True)[:3]
+        # Build context for the prompt
+        context = "\n\n".join([f"Page {c['page']}: {c['text']}" for c in top_chunks])
+        prompt = (
+            f"You are an AI assistant helping a user with a software manual. "
+            f"Answer the following question using only the provided context. "
+            f"If the answer is not in the context, say you don't know.\n\n"
+            f"Context:\n{context}\n\nQuestion: {question}\nAnswer:"
+        )
+        # Get answer from OpenAI chat/completion API
+        chat_response = openai.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=[{"role": "user", "content": prompt}],
+            max_tokens=256,
+            temperature=0.2
+        )
+        answer = chat_response.choices[0].message.content.strip()
+        return jsonify({
+            'answer': answer,
+            'references': [{'page': c['page'], 'similarity': c['similarity']} for c in top_chunks]
+        }), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
