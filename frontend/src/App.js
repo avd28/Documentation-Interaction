@@ -170,6 +170,9 @@ function App() {
             <div className="status-msg">{indexingStatus}</div>
           </div>
         )}
+        <div style={{ marginTop: 'auto', width: '100%', textAlign: 'center', fontSize: '0.95em', color: '#b0b8c1', opacity: 0.85, paddingTop: '2em', paddingBottom: '0.5em' }}>
+          Powered by OpenAI GPT-3.5
+        </div>
       </aside>
       <div className="main-content">
         <main>
@@ -224,29 +227,14 @@ function App() {
           )}
           {section === 'admin' && (
             <div>
-              {/* Usage statistics with graphics */}
+              {/* Usage statistics as simple counters */}
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '3em', marginBottom: '2.5em' }}>
-                {/* Dial gauge for manuals uploaded */}
                 <div style={{ textAlign: 'center' }}>
-                  <svg width="90" height="60" viewBox="0 0 90 60">
-                    <path d="M10,50 A40,40 0 0,1 80,50" fill="none" stroke="#444b5a" strokeWidth="10" />
-                    <path
-                      fill="none"
-                      stroke="#61dafb"
-                      strokeWidth="10"
-                      strokeDasharray={Math.max(1, files.length) * 22 + ',' + 126}
-                      d={`M10,50 A40,40 0 0,1 ${10 + 70 * Math.min(1, files.length / 5)},50`} />
-                    <circle cx="45" cy="50" r="6" fill="#61dafb" />
-                  </svg>
-                  <div style={{ fontWeight: 'bold', fontSize: '1.1em', marginTop: '0.3em' }}>Manuals Uploaded</div>
+                  <div style={{ fontWeight: 'bold', fontSize: '1.1em', marginBottom: '0.3em' }}>Manuals Uploaded</div>
                   <div style={{ fontSize: '1.5em', color: '#61dafb', fontWeight: 'bold' }}>{files.length}</div>
                 </div>
-                {/* Progress bar for questions asked */}
                 <div style={{ textAlign: 'center', minWidth: '180px' }}>
                   <div style={{ fontWeight: 'bold', fontSize: '1.1em', marginBottom: '0.3em' }}>Questions Asked</div>
-                  <div style={{ background: '#23272f', borderRadius: '8px', height: '18px', width: '100%', maxWidth: '180px', margin: '0 auto', overflow: 'hidden', boxShadow: '0 1px 4px rgba(0,0,0,0.08)' }}>
-                    <div style={{ height: '100%', width: `${Math.min(100, chatHistory.length * 10)}%`, background: '#61dafb', borderRadius: '8px', transition: 'width 0.3s' }}></div>
-                  </div>
                   <div style={{ fontSize: '1.5em', color: '#61dafb', fontWeight: 'bold', marginTop: '0.2em' }}>{chatHistory.length}</div>
                 </div>
               </div>
